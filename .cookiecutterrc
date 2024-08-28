@@ -1,0 +1,41 @@
+# This file exists so you can easily regenerate your project.
+#
+# `cookiepatcher` is a convenient shim around `cookiecutter`
+# for regenerating projects (it will generate a .cookiecutterrc
+# automatically for any template). To use it:
+#
+#    pip install cookiepatcher
+#    cookiepatcher gh:itisfoundation/cookiecutter-osparc-service project-path
+#
+# See:
+#    https://pypi.python.org/pypi/cookiepatcher
+#
+# Alternatively, you can run:
+#
+#    cookiecutter --overwrite-if-exists --config-file=project-path/.cookiecutterrc gh:itisfoundation/cookiecutter-osparc-service
+#
+
+default_context:
+
+    _checkout:                 None
+    _output_dir:               '/home/ordonez/osparc_projects/cookiecutter-osparc-service'
+    _repo_dir:                 '.'
+    _template:                 '.'
+    author_affiliation:        'ZMT ZurichMedTech AG'
+    author_email:              'ordonez@zmt.swiss'
+    author_name:               'Javier Garcia Ordonez'
+    contact_email:             'ordonez@zmt.swiss'
+    default_docker_registry:   'itisfoundation'
+    docker_base:               'alpine:3.8'
+    git_repo:                  'github'
+    git_username:              'JavierGOrdonnez'
+    number_of_inputs:          '4'
+    number_of_outputs:         '4'
+    project_name:              'Medical Image Processing - Computational Service'
+    project_package_name:      'comp-medimproc'
+    project_short_description: 'Medical Image Processing - Computational Service'
+    project_slug:              'comp-medimproc'
+    project_type:              'computational'
+    release_date:              '2024'
+    version:                   '0.1.0'
+    version_display:           '0.1.0'
