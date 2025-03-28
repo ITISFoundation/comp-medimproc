@@ -1,9 +1,11 @@
 FROM ubuntu:18.04 as base 
 # FROM alpine:3.8 as base
-## using alpine would be slimer but doesnt have apt-get so it would imply reworking quite a few things
+## FIXME using alpine would be slimer but doesnt have apt-get so it would imply reworking quite a few things
 ## however could be bad for compatibility with the Jupyter version (eg copy-paste between Dockerfiles might not work anymore)
 
-## Separating build & production could also help reduce image size
+## FIXME Separating build & production could also help reduce image size
+## All execution of .sh files, all download of .zip, etc happen in "build";
+## Final folders & declaration of ENV variables happen in "production".
 
 LABEL maintainer="ordonez"
 
@@ -15,6 +17,7 @@ RUN adduser --uid ${SC_USER_ID} --disabled-password --gecos "" --shell /bin/sh -
 # # alpine: 
 # RUN adduser -D -u ${SC_USER_ID} -s /bin/sh -h /home/${SC_USER_NAME} ${SC_USER_NAME}
 
+## TODO put together all apt-get update
 
 # ubuntu:
 RUN apt-get update \
@@ -26,12 +29,6 @@ RUN apt-get update \
 # RUN apk add --no-cache \
 #     su-exec \
 #     jq
-
-# -------------------------- Build stage -------------------
-# Installs build/package management tools and third party dependencies
-#
-# + /build             WORKDIR
-#
 
 FROM base as build
 
@@ -46,6 +43,9 @@ COPY --chown=${SC_USER_NAME}:${SC_USER_NAME} src/comp-medimproc src/comp-medimpr
 #TODO:
 # uncomment and adapt if build steps are necessary
 # RUN cp -R src/comp-medimproc/* /build/bin
+
+# uncomment and adapt if python necessary
+# RUN $SC_PIP install --upgrade pip wheel setuptools
 # ------------------------------------------------------------------------------------
 
 # --------------------------Production stage -------------------
@@ -87,10 +87,41 @@ RUN apt-get -qq update \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR ${HOME}/mrtrix3
-RUN git clone -b "master" --depth 1 https://github.com/MRtrix3/mrtrix3.git . \
-    && ./configure "" && NUMBER_OF_PROCESSORS=4 ./build -persistent -nopaginate \
-    && rm -rf tmp
+### OTHER option would be to install conda and then "conda install -c mrtrix3 mrtrix3"
+# ## TODO eventually merge w above (once done w build process)
+# RUN apt-get -qq update \
+#     && apt-get install -yq --no-install-recommends \
+#     build-essential \
+#     git \
+#     python \
+#     ## python2.7 is enough to build MRtrix3
+#     ### TODO all of this should be done on a "build" stage independent of production
+#     # python3 \
+#     # python3-pip \
+#     ca-certificates \
+#     && rm -rf /var/lib/apt/lists/*
+
+# WORKDIR ${HOME}/mrtrix3
+# ## TODO make into single command again
+# # RUN echo python --version
+# # RUN git config --global http.sslBackend schannel
+# RUN git clone -b "master" --depth 1 https://github.com/MRtrix3/mrtrix3.git . 
+# RUN ./configure && NUMBER_OF_PROCESSORS=4 ./build \
+#     && rm -rf tmp
+
+## miniconda - dont know if python will be able to find it later. Keep previous for now. 
+## But would make building (& reproducibility) easier probably
+RUN apt-get -qq update \
+    && apt-get install -yq --no-install-recommends \
+    git \
+    ca-certificates \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p ~/miniconda3 \
+    && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh \
+    && bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3 \
+    && rm ~/miniconda3/miniconda.sh \
+    && ~/miniconda3/bin/conda install -c mrtrix3 -y mrtrix3
 
 WORKDIR ${HOME}/art
 RUN curl -fsSL https://osf.io/73h5s/download \
@@ -107,7 +138,10 @@ ENV ANTSPATH="$HOME/ants/bin" \
 ############################################################
 ## Freesurfer
 WORKDIR ${HOME}
+## TODO move above
 RUN apt-get update && apt-get install -y tcsh bc libgomp1 perl-modules \
+    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y wget \
     && rm -rf /var/lib/apt/lists/*
 RUN wget -N -qO- ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/6.0.0/freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.0.tar.gz | tar -xzv -C ${HOME} 
 # \ && rm -rf ${HOME}/freesurfer/subjects  # we actually need subjects/fsaverage for recon-all
@@ -123,9 +157,10 @@ ENV PATH=$FREESURFER_HOME/bin:$MINC_BIN_DIR:$PATH
 ## FSL
 WORKDIR ${HOME}
 ENV FSLDIR ${HOME}/fsl
-RUN wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py &&\ 
-    echo "" | python fslinstaller.py -d ${FSLDIR} &&\ 
-    . ${FSLDIR}/etc/fslconf/fsl.sh
+RUN wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py 
+RUN apt-get update && apt-get install python -y && rm -rf /var/lib/apt/lists/*
+RUN echo "" | python fslinstaller.py -d ${FSLDIR}
+RUN . ${FSLDIR}/etc/fslconf/fsl.sh
 ENV FSLOUTPUTTYPE="NIFTI_GZ" \
     FSLTCLSH="$FSLDIR/bin/fsltclsh" \
     FSLWISH="$FSLDIR/bin/fslwish" \

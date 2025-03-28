@@ -37,10 +37,10 @@ services:
           "output_4": {"displayOrder": 4.0, "label": "output_4_label", "description":
           "The input 4 description", "type": "string", "fileToKeyMap": {"somefilename.ext":
           "output_4"}}}}'
-        org.label-schema.build-date: '2024-08-28T16:18:24Z'
+        org.label-schema.build-date: '2024-08-30T12:46:44Z'
         org.label-schema.schema-version: '1.0'
-        org.label-schema.vcs-ref: ''
-        org.label-schema.vcs-url: ''
+        org.label-schema.vcs-ref: 0aaffeaa26d056855fa53fd080f2be2965dc8445
+        org.label-schema.vcs-url: https://github.com/ITISFoundation/comp-medimproc.git
         simcore.service.restart-policy: no-restart
         simcore.service.settings: '[{"name": "Resources", "type": "Resources", "value":
           {"Limits": {"NanoCPUs": 1000000000, "MemoryBytes": 2147483648}}}]'

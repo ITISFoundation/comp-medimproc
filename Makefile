@@ -42,6 +42,7 @@ compose-spec: ## runs ooil to assemble the docker-compose.yml file
 build: | compose-spec	## build docker image
 	docker compose build
 
+export DOCKER_BUILDKIT ?= 1
 # To test built service locally -------------------------------------------------------------------------
 .PHONY: run-local
 run-local:	## runs image with local configuration
